@@ -16,7 +16,7 @@ async def on_ready():
 
 @client.event
 async def on_member_join(member):
-  url=f"https://discord.com/api/v10//guilds/518371205452005387/members/{member.id}"
+  url=f"https://discord.com/api/v10/guilds/518371205452005387/members/{member.id}"
   headers = {"Authorization": "専科に入ってるアカウントのトークン"}
   response = requests.get(url, headers=headers)
   if response.status_code == 404:
