@@ -27,7 +27,10 @@ async def on_member_join(member):
   if response.status_code == 404:
     status="spam"
     await client.change_presence(activity=discord.CustomActivity(name=f"迎撃中"))
-    await member.send("参加しようとなさったサーバーは特定のユーザー向けに設定されているため、キックしました。\nもしこの処理が間違いだと思われる場合招待リンクの発行者に問い合わせてください。\nThis server is configured for a specific user.You have been kicked from the server.\nIf you believe this process is in error, please contact the publisher of the invitation link")
+    try:
+        await member.send("参加しようとなさったサーバーは特定のユーザー向けに設定されているため、キックしました。\nもしこの処理が間違いだと思われる場合招待リンクの発行者に問い合わせてください。\nThis server is configured for a specific user.You have been kicked from the server.\nIf you believe this process is in error, please contact the publisher of the invitation link")
+    except:
+        print("message error")
     await member.kick(reason="専科への所属を確認できませんでした。")
     data=loadjson("logchannel.json")
     logchannelid=find_key(data, str(member.guild.id))
