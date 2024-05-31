@@ -5,8 +5,9 @@ import json
 from file import loadjson, loadtxt, savetxt, savejson
 from discord.ext import commands
 from discord.app_commands import default_permissions
+from datetime import datetime
 
-TOKEN="Please Insert TOKEN"
+TOKEN="TOKENPLEASE"
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
@@ -24,16 +25,25 @@ async def on_member_join(member):
      print("bot")
      return
   url=f"https://discord.com/api/v10/guilds/518371205452005387/members/{member.id}"
-  headers = {"Authorization": "TOKEN"}
+  headers = {"Authorization": "TOKENPLSEASE"}
   response = requests.get(url, headers=headers)
   url2=f"https://discord.com/api/v10/guilds/1240513406532849816/members/{member.id}"
-  headers2 = {"Authorization": "TOKEN"}
+  headers2 = {"Authorization": "TOKENPLSEASE"}
   response2 = requests.get(url2, headers=headers2)
   if response.status_code == 404:
     status="spam"
     await spamban(member,status)
   elif not response2.status_code == 404:
     status="kaizoku"
+    await spamban(member,status)
+
+  url3=f"https://discord-navy.net/users/api.php?id={member.id}"
+  response3 = requests.get(url3)
+  response3.raise_for_status()
+  data = response3.json()
+  print(data)
+  if data.get("exists", True):
+    status="kaigun"
     await spamban(member,status)
   else:
     data=loadjson("configblack.json")
@@ -50,6 +60,9 @@ async def on_member_join(member):
          status="blacklist"
          await spamban(member,status)
          f = open('log.txt', 'a')
+         now = datetime.now()
+         desired_format = "%Y/%m/%d %H:%M:%S"
+         formatted_time = now.strftime(desired_format)
          f.write(f"{member}:{status}:{member.guild}\n")
          f.close()
          return
@@ -70,7 +83,10 @@ async def on_member_join(member):
     spamer=loadtxt("spamer.txt")
     await client.change_presence(activity=discord.CustomActivity(name=f"やっつけたスパム:{spamer}人"))
   f = open('log.txt', 'a')
-  f.write(f"{member}:{status}:{member.guild}\n")
+  now = datetime.now()
+  desired_format = "%Y/%m/%d %H:%M:%S"
+  formatted_time = now.strftime(desired_format)
+  f.write(f"{formatted_time}:{member}:{status}:{member.guild}\n")
   f.close()
   print(status)
 
@@ -78,7 +94,7 @@ async def on_member_join(member):
 async def spamban(member,status):
     await client.change_presence(activity=discord.CustomActivity(name=f"迎撃中"))
     try:
-       await member.send("参加しようとなさったサーバーは特定のユーザー向けに設定されているため、キックしました。\nもしこの処理が間違いだと思われる場合招待リンクの発行者に問い合わせてください。\nThis server is configured for a specific user.You have been kicked from the server.\nIf you believe this process is in error, please contact the publisher of the invitation link")
+       await member.send("参加しようとなさったサーバーは特定のユーザー向けに設定されているため、キックしました。\nもしこの処理が間違いだと思われる場合招待リンクの発行者に問い合わせてください。\nThis server is configured for a specific user.You have been kicked from the server.\nIf you believe this process is in error, please contact the publisher of the invitation link.\n------------\n注意！Discord海賊団は__特定指定スパム軍団__になっています！SEKAMに海賊団が理由で拒否された場合、__ブラックリスト入り__します！\n自分が専科民なのに遊びで入ってしまった場合はDMにてその旨を書いてください。")
     except:
        print("message send error")
     await member.kick(reason="専科への所属を確認できませんでした。")
@@ -135,7 +151,7 @@ async def on_guild_join(guild):
     embed3.add_field(name="設定方法", value="/setting blacklist コマンドをサーバー内で実行し、ONかOFFを選びます(初期設定ではオン)。", inline=True)
     try:
         await owner.send(content=greeting_message,embeds=[embed,embed2,embed3])
-        await owner.send("また、Sekamの制限を外したいときは私をキックしてください。\n私のアイコンをクリックしたら下くらいにある「アプリを追加」から簡単に再追加できます。\n[プライバシーポリシー](https://death.kakikou.app/sekam/privacy/ )を一応書いてますが個人情報を集める機能がそもそも備わってないので気にしなくて大丈夫だと思います。気にする必要が出てきたら場合また連絡します。\n最後に、お問い合わせとか機能の要望はこのDMに送られても気づけないので開発者(DiscordID:@kakik0u)に連絡して下さい。")
+        await owner.send("よくある勘違いとして「すでにいるメンバーも専科から抜けると自動でキックされる」というものがありますがそのような機能はありません(50人規模のサーバーでないと現実的ではない)\nまた、Sekamの制限を外したいときは私をキックしてください。\n私のアイコンをクリックしたら下くらいにある「アプリを追加」から簡単に再追加できます。\n[プライバシーポリシー](https://death.kakikou.app/sekam/privacy/ )を一応書いてますが個人情報を集める機能がそもそも備わってないので気にしなくて大丈夫だと思います。気にする必要が出てきたら場合また連絡します。\n最後に、お問い合わせとか機能の要望はこのDMに送られても気づけないので開発者(DiscordID:@kakik0u)に連絡して下さい。")
         print(f"サーバー {guild.name} のオーナー {owner.name} にDMを送信しました。")
     except discord.HTTPException:
         print(f"サーバー {guild.name} のオーナー {owner.name} にDMを送信できませんでした。")
@@ -249,9 +265,10 @@ async def on_button_click(inter:discord.Interaction):
         await inter.response.send_message("ちゃんと動きました",ephemeral=True)
     except:
         await inter.response.send_message("エラーが発生しました。SEKAMがそのチャンネルを見ること/送信することができるかご確認ください。",ephemeral=True)
-
-
-
+  elif custom_id == "undoname":
+    name=loadtxt(f"./renewcache/{inter.user.id}.txt")
+    await inter.user.edit(nick=name)
+    await inter.response.send_message("戻しました")
 
 def find_key(json_data,logid):
     data = json_data
