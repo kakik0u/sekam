@@ -7,7 +7,7 @@ from discord.ext import commands
 from discord.app_commands import default_permissions
 from datetime import datetime
 
-TOKEN="TOKENPLEASE"
+TOKEN="BOTTOKEN"
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
@@ -25,32 +25,17 @@ async def on_member_join(member):
      print("bot")
      return
   url=f"https://discord.com/api/v10/guilds/518371205452005387/members/{member.id}"
-  headers = {"Authorization": "TOKENPLSEASE"}
+  headers = {"Authorization": "専科に加入しているTOKEN"}
   response = requests.get(url, headers=headers)
-  url2=f"https://discord.com/api/v10/guilds/1240513406532849816/members/{member.id}"
-  headers2 = {"Authorization": "TOKENPLSEASE"}
-  response2 = requests.get(url2, headers=headers2)
   if response.status_code == 404:
     status="spam"
     await spamban(member,status)
-  elif not response2.status_code == 404:
-    status="kaizoku"
-    await spamban(member,status)
-
-  url3=f"https://discord-navy.net/users/api.php?id={member.id}"
-  response3 = requests.get(url3)
-  response3.raise_for_status()
-  data = response3.json()
-  print(data)
-  if data.get("exists", True):
-    status="kaigun"
-    await spamban(member,status)
+  
+  data=loadjson("configblack.json")
+  configblack=find_key(data, str(member.guild.id))
+  if configblack == "off":
+      pass
   else:
-    data=loadjson("configblack.json")
-    configblack=find_key(data, str(member.guild.id))
-    if configblack == "off":
-       pass
-    else:
        print("blackliststart")
        data = dict(loadjson("blacklist.json"))
        key = str(member.id)
@@ -63,30 +48,30 @@ async def on_member_join(member):
          now = datetime.now()
          desired_format = "%Y/%m/%d %H:%M:%S"
          formatted_time = now.strftime(desired_format)
-         f.write(f"{member}:{status}:{member.guild}\n")
+         f.write(f"{formatted_time}:{member}:{member.id}:{status}:{member.guild}\n")
          f.close()
          return
-         print(status)
+         
        else:
          pass
-    status="senka"
-    data=loadjson("logchannel.json")
-    logchannelid=find_key(data, str(member.guild.id))
-    if logchannelid == "Nothing":
+  status="senka"
+  data=loadjson("logchannel.json")
+  logchannelid=find_key(data, str(member.guild.id))
+  if logchannelid == "Nothing":
        pass
-    else:
+  else:
        logch=client.get_channel(int(logchannelid))
        try:
           await logch.send(f"{member.display_name}(DiscordID:{member.id})は専科にいます！やったー！")
        except:
           pass
-    spamer=loadtxt("spamer.txt")
-    await client.change_presence(activity=discord.CustomActivity(name=f"やっつけたスパム:{spamer}人"))
+  spamer=loadtxt("spamer.txt")
+  await client.change_presence(activity=discord.CustomActivity(name=f"やっつけたスパム:{spamer}人"))
   f = open('log.txt', 'a')
   now = datetime.now()
   desired_format = "%Y/%m/%d %H:%M:%S"
   formatted_time = now.strftime(desired_format)
-  f.write(f"{formatted_time}:{member}:{status}:{member.guild}\n")
+  f.write(f"{formatted_time}:{member}:{member.id}:{status}:{member.guild}\n")
   f.close()
   print(status)
 
@@ -94,7 +79,7 @@ async def on_member_join(member):
 async def spamban(member,status):
     await client.change_presence(activity=discord.CustomActivity(name=f"迎撃中"))
     try:
-       await member.send("参加しようとなさったサーバーは特定のユーザー向けに設定されているため、キックしました。\nもしこの処理が間違いだと思われる場合招待リンクの発行者に問い合わせてください。\nThis server is configured for a specific user.You have been kicked from the server.\nIf you believe this process is in error, please contact the publisher of the invitation link.\n------------\n注意！Discord海賊団は__特定指定スパム軍団__になっています！SEKAMに海賊団が理由で拒否された場合、__ブラックリスト入り__します！\n自分が専科民なのに遊びで入ってしまった場合はDMにてその旨を書いてください。")
+       await member.send("参加しようとなさったサーバーは特定のユーザー向けに設定されているため、キックしました。\nもしこの処理が間違いだと思われる場合招待リンクの発行者に問い合わせてください。\nThis server is configured for a specific user.You have been kicked from the server.\nIf you believe this process is in error, please contact the publisher of the invitation link.\n------------\n注意！Discord海賊団は__特定指定スパム軍団__になっています！SEKAMに海賊団が理由で拒否された場合、__ブラックリスト入り__します！\n自分が専科民なのに遊びで入ってしまった場合は専科にてその旨を書いてください。")
     except:
        print("message send error")
     await member.kick(reason="専科への所属を確認できませんでした。")
@@ -127,11 +112,12 @@ async def spamban(member,status):
     key = str(member.id)
     keydata=list(data.keys())
     if key in keydata:
-       del data[key]
-       data[key] = member.guild.name
-       savejson("blacklist.json",data)
+       #del data[key]
+       #data[key] = status
+       #savejson("blacklist.json",data)
+       pass
     else:
-        data[key] = member.guild.name
+        data[key] = status
         savejson("blacklist.json",data)
     spamer=loadtxt("spamer.txt")
     spamer2=int(spamer)+1
@@ -252,8 +238,6 @@ async def on_interaction(inter:discord.Interaction):
             await on_button_click(inter)
     except KeyError:
         pass
-ticket_owners = {}
-ticket2_owners={}
 async def on_button_click(inter:discord.Interaction):
   custom_id = inter.data["custom_id"]
   if custom_id == "logtest":
@@ -265,10 +249,8 @@ async def on_button_click(inter:discord.Interaction):
         await inter.response.send_message("ちゃんと動きました",ephemeral=True)
     except:
         await inter.response.send_message("エラーが発生しました。SEKAMがそのチャンネルを見ること/送信することができるかご確認ください。",ephemeral=True)
-  elif custom_id == "undoname":
-    name=loadtxt(f"./renewcache/{inter.user.id}.txt")
-    await inter.user.edit(nick=name)
-    await inter.response.send_message("戻しました")
+  
+
 
 def find_key(json_data,logid):
     data = json_data
@@ -295,27 +277,3 @@ def find_key(json_data,logid):
         return "Nothing"
     
 client.run(TOKEN)
-
-
-
-"""
-カスの残骸
-
-@tree.command(name="log",description="ログチャンネルを指定できます")
-@app_commands.default_permissions(administrator=True)
-async def logid(ctx:discord.Interaction,channel: discord.TextChannel):
-  data = dict(loadjson("logchannel.json"))
-  key = str(ctx.guild.id)
-  keydata=list(data.keys())
-  chid=str(channel.id)
-  if key in keydata:
-    del data[key]
-    data[key] = chid
-    savejson("logchannel.json",data)
-    await ctx.response.send_message("設定を変更しました。",ephemeral=True)
-  else:
-    data[key] = chid
-    savejson("logchannel.json",data)
-    await ctx.response.send_message("設定されました。",ephemeral=True)
-
-"""
